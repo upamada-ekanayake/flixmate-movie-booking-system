@@ -6,6 +6,7 @@ interface HeroSectionProps {
   title: string;
   synopsis: string;
   trailerUrl: string;
+  posterUrl: string;
   duration: number;
   releaseYear: number;
   rating: number;
@@ -19,6 +20,7 @@ export default function HeroSection({
   title,
   synopsis,
   trailerUrl,
+  posterUrl,
   duration,
   releaseYear,
   rating,
@@ -28,7 +30,31 @@ export default function HeroSection({
 }: HeroSectionProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Programmatically trigger play — required by most browsers' autoplay policy.
+  // The video MUST be muted for autoplay to be allowed without user gesture.
+  const attemptPlay = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.muted = true;
+    setIsMuted(true);
+    vid.play().catch(() => {
+      // Autoplay was blocked — video stays paused; poster image shows instead
+      setVideoError(true);
+    });
+  };
+
+  // When trailerUrl changes (movie swap) — reload and re-attempt play
+  useEffect(() => {
+    setIsVideoLoaded(false);
+    setVideoError(false);
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.load();
+    attemptPlay();
+  }, [trailerUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync muted state with the underlying video element
   useEffect(() => {
@@ -37,13 +63,13 @@ export default function HeroSection({
     }
   }, [isMuted]);
 
-  // Reset video-loaded state when the trailer URL changes (movie swap)
-  useEffect(() => {
-    setIsVideoLoaded(false);
-  }, [trailerUrl]);
-
-  const handleVideoLoad = () => {
+  const handleCanPlay = () => {
     setIsVideoLoaded(true);
+    attemptPlay();
+  };
+
+  const handleVideoError = () => {
+    setVideoError(true);
   };
 
   // Convert normalized score (0–1) to a human-readable percentage badge
@@ -54,18 +80,28 @@ export default function HeroSection({
 
       {/* ── Cinematic Background Video Loop ────────────────────────── */}
       <div className="absolute inset-0 w-full h-full">
-        <video
-          ref={videoRef}
-          src={trailerUrl}
-          autoPlay
-          loop
-          muted={isMuted}
-          playsInline
-          onCanPlay={handleVideoLoad}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-            isVideoLoaded ? 'opacity-80 scale-100' : 'opacity-0 scale-105'
-          }`}
+        {/* Poster image — always visible as fallback behind the video */}
+        <img
+          src={posterUrl}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
+        {/* Video overlay — fades in once loaded; hidden on error */}
+        {!videoError && (
+          <video
+            ref={videoRef}
+            src={trailerUrl}
+            loop
+            muted
+            playsInline
+            preload="auto"
+            onCanPlay={handleCanPlay}
+            onError={handleVideoError}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+              isVideoLoaded ? 'opacity-80' : 'opacity-0'
+            }`}
+          />
+        )}
         {/* Film noir depth gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/30 to-transparent" />

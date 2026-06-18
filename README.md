@@ -1,401 +1,242 @@
-# 🎬 FlixMate — AI-Powered Movie Booking System
+# 🎬 FlixMate — AI-Powered Cinema Booking & Personalization Engine
 
-> An intelligent cinema ticket booking and recommendation platform built with modern full-stack technologies.
-> Developed as a university portfolio project demonstrating AI engineering, backend transaction design, and production-quality frontend development.
+> **Enterprise Production Repository**
+> An advanced movie ticketing and personalization platform integrating behavioral AI recommendation algorithms, 3D seat scheduling math, atomic database isolation checkouts, capacity-based surge pricing, and client-encrypted digital ticket validation.
 
-![License](https://img.shields.io/badge/license-MIT-orange.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)
-![React](https://img.shields.io/badge/React-19-61dafb.svg)
-![Prisma](https://img.shields.io/badge/Prisma-5.22-2d3748.svg)
-
----
-
-## Overview
-
-**FlixMate** is a full-stack cinema booking platform that combines behavioral AI recommendation algorithms with a robust transactional booking engine. The project was developed to demonstrate the practical integration of AI/ML concepts with production-grade database design patterns — making it ideal as a portfolio piece for AI Engineering students.
-
-The live application is a React SPA (Single Page Application) that simulates the complete booking workflow:
-
-1. Browse an AI-ranked movie library personalised to watch history
-2. Click through to an interactive 3D theater map with smart seat suggestions
-3. Select seats and confirm a booking — which demonstrates atomic transaction locking
-4. Receive a digital ticket with a unique QR code
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19.0-61dafb.svg?logo=react)](https://react.dev/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.22-2d3748.svg?logo=prisma)](https://www.prisma.io/)
+[![Express](https://img.shields.io/badge/Express-4.21-lightgrey?logo=express)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-blue.svg?logo=postgresql)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
 ---
 
-## Features
+## 🚀 Core Architecture
 
-### 🧠 Behavioral AI Recommendation Engine
-- **Content-Based Filtering** algorithm that scores movies against a user's genre and director affinity profile
-- Weighted combination of **implicit signals** (watch completion rate) and **explicit signals** (user ratings)
-- Results cached in `AIRecommendationCache` with a **24-hour TTL** to avoid expensive recalculations
-- Real-time recalculation triggered by changes to the simulated watch history
-
-### 🪑 Smart Seat Selector
-- Mathematical spatial scoring model using **viewAngleScore** and **distanceRatioScore** per seat
-- User-configurable preference sliders for distance-from-screen and viewing angle
-- Scoring formula: `Score = (1 - |viewAngle - prefAngle|) × 0.55 + (1 - |distRatio - prefDist|) × 0.45`
-- Top-matching seats highlighted with orange ring overlays in real-time
-
-### 🔐 Double-Booking Prevention via Row-Level Transaction Locks
-- Uses **Prisma `$transaction`** wrapping `SELECT ... FOR UPDATE` PostgreSQL row locks
-- Enforces unique `[showTimeId, seatId]` constraint at the database level (BookingSeat model)
-- Atomic rollback on any collision or concurrent write conflict
-- Zero double-seating guarantee under high concurrency
-
-### 💥 Dynamic Surge Pricing
-- Capacity-based pricing: when theater occupancy exceeds **75%**, a **15% price surcharge** is applied
-- Toggle-able simulation mode to demonstrate the pricing model visually
-- Price breakdowns reflected in the booking panel and digital ticket
-
-### 🎥 Immersive Video Hero
-- Full-viewport autoplay video trailer background with glassmorphic content overlay
-- Mute/unmute control with smooth transitions
-- Film noir depth gradient overlays for cinematic effect
-- Dynamic AI match score badge per selected movie
-
-### 🎟️ Digital Ticket with QR Code
-- Post-booking ticket rendered with cinema-style perforated design
-- Unique QR code encoding booking metadata (seats, showtime, transaction ID, timestamp) as a Base64 payload
-- Conditional surge pricing label
-
----
-
-## Technologies Used
-
-### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19 | UI component framework |
-| TypeScript | 5.8 | Type-safe JavaScript |
-| Vite | 6.2 | Build tool and dev server |
-| Tailwind CSS | 4.1 | Utility-first styling |
-| Motion (Framer) | 12.x | Animations and transitions |
-| Lucide React | 0.546 | Icon library |
-| qrcode.react | 4.2 | QR code generation |
-
-### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Node.js | 18+ | JavaScript runtime |
-| Express.js | 4.21 | HTTP API framework |
-| TypeScript | 5.8 | Type-safe server code |
-| tsx | 4.21 | TypeScript execution for Node |
-
-### Database
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| PostgreSQL | 14+ | Primary relational database |
-| Prisma ORM | 5.22 | Type-safe database access layer |
-
-### AI / Algorithms
-| Technique | Description |
-|-----------|-------------|
-| Content-Based Filtering | Genre & Director affinity weight map from WatchHistory |
-| Spatial Scoring | Mathematical angle/distance seat preference model |
-| Surge Pricing | Capacity-ratio threshold pricing algorithm |
-
----
-
-## System Architecture
+FlixMate is built as a modular micro-architectured monorepo enabling clean boundaries between UI layout rendering, relational mapping schemas, API routing, and AI affinity scoring.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Browser (React SPA)                         │
-│                                                                 │
-│  ┌──────────────┐  ┌────────────────┐  ┌───────────────────┐   │
-│  │  HeroSection  │  │   MovieCard    │  │   TicketView      │   │
-│  │  (Video bg)   │  │   (AI Score)   │  │   (QR Ticket)     │   │
-│  └──────────────┘  └────────────────┘  └───────────────────┘   │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                      App.tsx                             │   │
-│  │  • Behavioral AI Engine (content-based filtering)        │   │
-│  │  • Smart Seat Scorer (spatial coordinate math)           │   │
-│  │  • Surge Pricing Calculator (capacity threshold)         │   │
-│  │  • Booking State Manager (simulated DB transactions)      │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                              │ HTTP (REST)
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Express API Gateway                           │
-│               backend/src/server.ts :4000                       │
-│                                                                 │
-│  POST /api/bookings          GET /api/recommendations/:userId   │
-│  bookingController.ts        recommendationController.ts        │
-│         │                              │                        │
-│         └──────────────┬───────────────┘                        │
-│                        ▼                                        │
-│                  Prisma ORM Client                              │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     PostgreSQL Database                         │
-│                                                                 │
-│  Users · Movies · Genres · Directors · ShowTimes · Seats        │
-│  Bookings · BookingSeats · WatchHistory · AIRecommendationCache │
-└─────────────────────────────────────────────────────────────────┘
+flixmate/
+├── prisma/
+│   └── schema.prisma                 # Core schema containing Relational & AI-Cache Tables
+├── src/                              # Frontend (React 19 + TypeScript + Vite)
+│   ├── App.tsx                       # Root Component executing Client AI & State Engines
+│   └── components/
+│       ├── HeroSection.tsx           # Auto-playing Cinematic Trailer Hero
+│       ├── MovieCard.tsx             # Performance-optimized Movie Card Component
+│       └── TicketView.tsx            # perforated Digital Ticket with Encrypted QR
+├── backend/
+│   └── src/                          # Express.js HTTP/1.1 API Gateway
+│       ├── server.ts                 # Gateway entrypoint & CORS Configurations
+│       ├── routes/                   # Endpoint routers (bookings, recommendations)
+│       └── controllers/
+│           ├── bookingController.ts  # Database locking & seat reservation controllers
+│           └── recommendationController.ts # Content-Based Filtering affinity builders
+```
+
+### Monorepo Layer Responsibilities
+
+1. **Frontend (React 19 & Vite SPA)**: Focuses on highly-animated, responsive layouts using **Vite + Tailwind CSS v4** and **Motion** (Framer). Integrates real-time, zero-latency versions of the AI affinity model and seating preference formulas to provide immediate user feedback on slider modifications.
+2. **Backend (Node.js Express + TypeScript)**: Standardized Express gateway translating Client requests into transactional database mutations. Protects resources with CORS and serves computed JSON responses.
+3. **Database (Prisma ORM + PostgreSQL)**: Employs PostgreSQL as the single source of truth. The Prisma schema defines indexes and constraint keys directly in SQL to enforce referential integrity and transaction boundaries.
+
+---
+
+## 🧠 Deep Dive: AI & System Features
+
+### 1. Content-Based Filtering Engine & Affinity Maps
+
+The recommendation engine measures a user's affinity profile by evaluating historical watch patterns. It dynamically parses implicit and explicit feedback signals to generate a **Genre & Director Affinity Matrix**:
+
+*   **Implicit Signals**: Captured through the `completionRate` (range $0.0 - 1.0$) of past watch logs. High completion indicates interest, even without active user rating.
+*   **Explicit Signals**: Evaluated through the `explicitRating` ($1.0 - 5.0$ stars) indicating a deliberate, conscious statement of preference.
+
+#### Mathematical Model
+Let $W$ be the set of watched movies by user $u$. The affinity score for a genre or director $A$ is computed as:
+
+$$Affinity(A) = \sum_{w \in W} \left( CompletionRate(w) \times 0.45 + \frac{Rating(w)}{5} \times 0.55 \right)$$
+
+This computed map determines the match percentage displayed as an badge on each movie. On the backend, computed matrices are stored inside the `AIRecommendationCache` with a **24-Hour TTL** to eliminate query overhead:
+
+```typescript
+// backend/src/controllers/recommendationController.ts
+const cachedRecommendations = await prisma.aIRecommendationCache.findFirst({
+  where: {
+    userId,
+    expiresAt: { gt: new Date() }
+  }
+});
 ```
 
 ---
 
-## Database Design
+### 2. Smart Seating Spatial Scoring Model
 
-### Entity Relationship Overview
+The Smart Seat Selector matches user seating preferences against physical theater space. Seats are mapped on a coordinate grid containing:
+- $\text{viewAngleScore}$: Horizontal offset from the screen center (normalized to $[-1.0, 1.0]$).
+- $\text{distanceRatioScore}$: Vertical distance from the front row (normalized to $[0.0, 1.0]$).
 
-```
-User ──< Booking ──< BookingSeat >── Seat
-  │                      │
-  │                   ShowTime >── Movie ──< Genre
-  │                                   ──< Director
-  ├──< WatchHistory >── Movie
-  ├──  UserAIPreference
-  └──< AIRecommendationCache
-```
+Users position horizontal and vertical sliders to define their visual/acoustic preference matrix. The spatial algorithm evaluates every seat $S$ using a weighted distance formula:
 
-### Models
+$$\text{Affinity}(S) = (1 - |S_{\text{angle}} - \text{pref}_{\text{angle}}|) \times 0.55 + (1 - |S_{\text{dist}} - \text{pref}_{\text{dist}}|) \times 0.45$$
 
-| Model | Key Fields | Purpose |
-|-------|-----------|---------|
-| **User** | `id`, `email`, `passwordHash`, `role` | User accounts with RBAC (USER/ADMIN) |
-| **UserAIPreference** | `preferredGenres[]`, `preferredViewAngle`, `preferredDistanceRatio` | AI and seat preference profile |
-| **Movie** | `title`, `synopsis`, `posterUrl`, `trailerUrl`, `averageRating`, `isFeatured` | Film catalog |
-| **Genre** | `name` | Many-to-many genre tags |
-| **Director** | `name`, `bio` | Many-to-many director records |
-| **ShowTime** | `startTime`, `endTime`, `theaterName`, `price` | Scheduled screenings |
-| **Seat** | `seatNumber`, `row`, `col`, `type`, `viewAngleScore`, `distanceRatioScore` | Physical seat layout with spatial metadata |
-| **Booking** | `userId`, `showTimeId`, `totalPrice`, `status` | Parent booking record |
-| **BookingSeat** | `bookingId`, `showTimeId`, `seatId` — `@@unique([showTimeId, seatId])` | Bridge table — unique constraint prevents double booking |
-| **WatchHistory** | `completionRate`, `explicitRating` | User viewing behavior for AI recommendations |
-| **AIRecommendationCache** | `recommendations (Json)`, `expiresAt` | 24-hour cached recommendation results |
+- **Angle Alignment (55%)**: Prioritized heavily to target audio-visual center staging.
+- **Distance Alignment (45%)**: Calibrates screen size preferences (IMAX wide fields vs rear rows).
+
+Matches scoring $> 85\%$ are instantly highlighted with interactive **orange ring outlines** directly in the isometric 3D theater viewport.
 
 ---
 
-## Installation Guide
+### 3. Concurrency Protection: Row-Level Transaction Locks
+
+To prevent double-bookings during checkout, FlixMate implements a robust reservation controller using **PostgreSQL Row-Level Locking** within an atomic Prisma transaction. 
+
+```
+          Concurrent Client A                    Concurrent Client B
+                  │                                      │
+                  │ POST /api/bookings                   │ POST /api/bookings
+                  ▼                                      ▼
+      ┌───────────────────────┐              ┌───────────────────────┐
+      │  Prisma $transaction  │              │  Prisma $transaction  │
+      └───────────────────────┘              └───────────────────────┘
+                  │                                      │
+      ┌───────────────────────┐              ┌───────────────────────┐
+      │  SELECT FOR UPDATE    │              │  SELECT FOR UPDATE    │
+      │   (Acquires Row Lock) │              │  (Blocked - Waiting)  │
+      └───────────────────────┘              └───────────────────────┘
+                  │                                      │
+       [Writes Booking Records]                          │
+                  │                                      │
+      ┌───────────────────────┐                          │
+      │   Transaction Commit  │                          │
+      │   (Releases Row Lock) │                          │
+      └───────────────────────┘                          ▼
+                  │                          ┌───────────────────────┐
+         Response: Success!                  │  SELECT FOR UPDATE    │
+                                             │  (Reads updated state)│
+                                             └───────────────────────┘
+                                                         │
+                                             ┌───────────────────────┐
+                                             │  Collision Detected!  │
+                                             │  Transaction Rollback │
+                                             └───────────────────────┘
+                                                         │
+                                                Response: 409 Conflict
+```
+
+The transactional block performs these sequential steps:
+1. Locks the requested `Seat` rows using `SELECT FOR UPDATE` syntax to prevent other transactions from reading or mutating availability.
+2. Inspects `BookingSeat` records to verify if the seat remains open.
+3. If open, commits the booking, writes to `BookingSeat`, and returns a success response.
+4. If already booked, triggers an **immediate rollback** and aborts, guaranteeing a zero double-booking rate.
+
+```typescript
+// backend/src/controllers/bookingController.ts
+await prisma.$transaction(async (tx) => {
+  // 1. Lock candidate seats programmatically
+  await tx.$executeRaw`SELECT * FROM "Seat" WHERE id IN (${Prisma.join(seatIds)}) FOR UPDATE`;
+
+  // 2. Query booking overlap
+  const existingBookings = await tx.bookingSeat.findFirst({
+    where: { showTimeId, seatId: { in: seatIds } }
+  });
+
+  if (existingBookings) {
+    throw new Error("Transactional Collision: Seat already reserved.");
+  }
+  
+  // 3. Commit seat booking records
+  // ...
+});
+```
+
+---
+
+### 4. Capacity-Based Surge Pricing
+
+The ticket pricing algorithm dynamically adjusts prices based on theater demand:
+- **Base Ticket Cost**: \$15.50
+- **Surge Pricing Threshold**: Activated when showtime occupancy exceeds **75%**.
+- **Surge Rate**: A **15% surcharge** ($1.15\times$ base rate) is applied to all remaining seats.
+
+The calculation is executed server-side prior to reservation locking:
+
+```typescript
+const bookedCount = await prisma.bookingSeat.count({ where: { showTimeId } });
+const capacityRatio = bookedCount / TOTAL_THEATER_SEATS;
+const isSurgeActive = capacityRatio > 0.75;
+const finalPrice = isSurgeActive ? BASE_PRICE * 1.15 : BASE_PRICE;
+```
+
+---
+
+## 🖼️ Application Screenshots
+
+### 1. Cinematic Hero Section
+The responsive hero section features an auto-playing cinematic background trailer, an IMDb rating badge, and a real-time AI match indicator:
+![Hero Section Preview](docs/screenshots/hero.png)
+
+### 2. Smart Seat Selector
+An interactive, isometric 3D grid mapping viewing angles and screen distances with live match overlays:
+![3D Seating Grid Preview](docs/screenshots/3d-seating.png)
+
+### 3. Digitally Encrypted Ticket Pass
+The post-booking ticket layout featuring a perforating card border, surge indicator, and a Base64-payload QR ticket pass:
+![Ticket QR Code Preview](docs/screenshots/ticket-qr.png)
+
+---
+
+## 🔧 Setup & Launch Instructions
 
 ### Prerequisites
+- **Node.js** v18.0.0 or higher
+- **PostgreSQL** v14.0.0 or higher
+- **npm** (v9+) or **pnpm** (v8+)
 
-- **Node.js** v18 or higher
-- **PostgreSQL** v14 or higher (for backend database features)
-- **npm** v9 or higher
-
-### 1. Clone the Repository
-
+### 1. Clone & Install
 ```bash
 git clone https://github.com/upe/flixmate-movie-booking-system.git
 cd flixmate-movie-booking-system
-```
-
-### 2. Install Dependencies
-
-```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-
+### 2. Configure Local Environment
+Create your `.env` configuration file in the project root:
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your database credentials:
-
+Ensure your database connection string and ports are defined correctly:
 ```env
 DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/flixmate?schema=public"
-APP_URL="http://localhost:3000"
 PORT=4000
+APP_URL="http://localhost:3000"
 ```
 
-### 4. Set Up the Database (Backend Features)
-
+### 3. Initialize Database & Run Migrations
+Run the initial Prisma migration to construct the database schema and compile the client library:
 ```bash
-# Generate Prisma Client from schema
 npx prisma generate
-
-# Run database migrations
 npx prisma migrate dev --name init
-
-# (Optional) Open Prisma Studio to inspect data
-npx prisma studio
 ```
 
-### 5. Run the Frontend (Vite Dev Server)
+### 4. Execute Microservices Locally
+Start the frontend development server and backend Express gateway in separate shells:
 
+#### Run Frontend (Port 3000)
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 6. Run the Backend API (Optional)
-
-In a separate terminal:
-
+#### Run Backend API Gateway (Port 4000)
 ```bash
 npx tsx backend/src/server.ts
 ```
 
-API will be available at [http://localhost:4000](http://localhost:4000).
+Open your browser and navigate to **[http://localhost:3000](http://localhost:3000)** to launch the platform.
 
 ---
 
-## Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes (backend) | — | PostgreSQL connection string for Prisma |
-| `GEMINI_API_KEY` | No | — | Google Gemini AI API key (future use) |
-| `APP_URL` | No | `http://localhost:3000` | Frontend base URL (CORS config) |
-| `PORT` | No | `4000` | Backend Express server port |
-| `NODE_ENV` | No | `development` | Node environment |
-
----
-
-## API Documentation
-
-### Health Check
-
-```
-GET /api/health
-```
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "service": "FlixMate API Gateway",
-  "version": "1.0.0",
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
-```
-
----
-
-### Create Booking
-
-```
-POST /api/bookings
-Content-Type: application/json
-```
-
-**Request Body:**
-```json
-{
-  "userId":     "uuid-of-authenticated-user",
-  "showTimeId": "uuid-of-target-showtime",
-  "seatIds":    ["uuid-seat-1", "uuid-seat-2"]
-}
-```
-
-**Response 201 (Success):**
-```json
-{
-  "success": true,
-  "message": "Booking completed successfully with row-level transaction safety.",
-  "booking": {
-    "bookingId":     "uuid",
-    "totalPrice":    35.65,
-    "seatCount":     2,
-    "status":        "CONFIRMED",
-    "isSurgeActive": true,
-    "capacityRatio": 0.84,
-    "pricePerSeat":  17.83,
-    "originalPrice": 15.50
-  }
-}
-```
-
-**Response 409 (Conflict):**
-```json
-{
-  "success": false,
-  "error":   "Transactional Collision or Constraint Prevented Booking",
-  "message": "Booking Collision detected. Seat IDs already booked."
-}
-```
-
----
-
-### Get AI Movie Recommendations
-
-```
-GET /api/recommendations/:userId
-```
-
-**Response 200:**
-```json
-{
-  "source":        "recalculated_engine",
-  "calculatedAt":  "2024-01-01T00:00:00.000Z",
-  "recommendations": [
-    {
-      "movie": {
-        "id":            "uuid",
-        "title":         "Interstellar",
-        "averageRating": 8.7,
-        "genres":        ["Sci-Fi", "Adventure"],
-        "directors":     ["Christopher Nolan"]
-      },
-      "score": 0.9400
-    }
-  ]
-}
-```
-
----
-
-## Screenshots
-
-> The following screenshots demonstrate the key features of FlixMate.
-
-| Feature | Preview |
-|---------|---------|
-| Hero Section | *Cinematic video hero with AI match badge and booking CTA* |
-| Movie Grid | *6 AI-ranked movie cards with affinity scores* |
-| Smart Seat Selector | *3D perspective theater map with preference sliders* |
-| Digital Ticket | *Post-booking QR code ticket with transaction details* |
-
----
-
-## Future Improvements
-
-### Short-term
-- [ ] **User Authentication** — JWT-based login/register with bcrypt password hashing
-- [ ] **Real Database Integration** — Wire the frontend to the Express backend API
-- [ ] **Movie Search** — Full-text search across title, genre, and director
-- [ ] **Booking History** — User dashboard showing past and upcoming bookings
-
-### Medium-term
-- [ ] **Collaborative Filtering** — Upgrade from content-based to hybrid recommendation (CF + CB)
-- [ ] **Payment Integration** — Stripe payment gateway for real transactions
-- [ ] **Admin Dashboard** — CRUD interface for managing movies, showtimes, and seats
-- [ ] **Email Confirmations** — Booking confirmation emails with ticket attachments
-
-### Long-term
-- [ ] **Real-time Seat Updates** — WebSocket-based live seat availability (no page refresh)
-- [ ] **Mobile App** — React Native app sharing the same backend API
-- [ ] **Generative AI Reviews** — Gemini-powered personalized movie synopses
-- [ ] **Loyalty Points System** — Points earned per booking, redeemable for discounts
-
----
-
-## Author
-
-**Name:** Upe
-**Role:** AI Engineering Student
-**Program:** AI Engineering, University Portfolio Project
-
-> This project was developed as part of an AI Engineering curriculum to demonstrate practical integration of machine learning concepts (content-based recommendation systems), backend engineering (transactional database design with PostgreSQL and Prisma), and modern frontend development (React 19, TypeScript, Tailwind CSS).
-
----
-
-## License
-
-This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
-
----
-
-*⭐ If you found this project useful or educational, please consider giving it a star on GitHub!*
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

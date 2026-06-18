@@ -82,9 +82,9 @@ const MOCK_MOVIES: Movie[] = [
       'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family, striving to prevent a catastrophic future only he can foresee.',
     duration: 166,
     releaseYear: 2024,
-    // Sandy desert dunes — cinematically matched to the Arrakis setting
+    // Official TMDB poster for Dune: Part Two (2024)
     posterUrl:
-      'https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=600&auto=format&fit=crop',
+      'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
     trailerUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     rating: 8.6,
@@ -99,9 +99,9 @@ const MOCK_MOVIES: Movie[] = [
       "When Earth becomes uninhabitable, a team of seasoned explorers travels through a newly discovered wormhole in space in an attempt to ensure humanity's long-term survival.",
     duration: 169,
     releaseYear: 2014,
-    // Deep space / galaxy nebula — perfectly matches the cosmic tone
+    // Official TMDB poster for Interstellar (2014)
     posterUrl:
-      'https://images.unsplash.com/photo-1465101162946-4377e57745c3?q=80&w=600&auto=format&fit=crop',
+      'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
     trailerUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
     rating: 8.7,
@@ -116,9 +116,9 @@ const MOCK_MOVIES: Movie[] = [
       'A listless Wade Wilson toils in civilian life. But when his homeworld faces an existential threat, he must reluctantly suit-up and convince a very grumpy Wolverine to join him.',
     duration: 128,
     releaseYear: 2024,
-    // High-energy urban neon city at night — action superhero aesthetic
+    // Official TMDB poster for Deadpool & Wolverine (2024)
     posterUrl:
-      'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=600&auto=format&fit=crop',
+      'https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg',
     trailerUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
     rating: 7.7,
@@ -133,9 +133,9 @@ const MOCK_MOVIES: Movie[] = [
       'An aging Chinese immigrant is swept up in an insane adventure, in which she alone can save the world by exploring other universes linking with the lives she could have led.',
     duration: 139,
     releaseYear: 2022,
-    // Vibrant multiverse portal light — surreal multiverse aesthetic
+    // Official TMDB poster for Everything Everywhere All at Once (2022)
     posterUrl:
-      'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=600&auto=format&fit=crop',
+      'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',
     trailerUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
     rating: 8.7,
@@ -150,9 +150,9 @@ const MOCK_MOVIES: Movie[] = [
       'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II, and the political fallout that followed.',
     duration: 180,
     releaseYear: 2023,
-    // Nuclear explosion silhouette / fire mushroom cloud — period drama tension
+    // Official TMDB poster for Oppenheimer (2023)
     posterUrl:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop',
+      'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
     trailerUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     rating: 8.9,
@@ -167,9 +167,9 @@ const MOCK_MOVIES: Movie[] = [
       'When a serial killer leaves cryptic clues targeting Gotham City\'s elite, Batman is forced into an investigation that reveals a vast conspiracy behind his city\'s criminal underworld.',
     duration: 176,
     releaseYear: 2022,
-    // Dark moody rainy city night — matches Gotham\'s noir aesthetic
+    // Official TMDB poster for The Batman (2022)
     posterUrl:
-      'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop',
+      'https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg',
     trailerUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     rating: 7.8,
@@ -420,6 +420,7 @@ export default function App() {
         title={selectedMovie.title}
         synopsis={selectedMovie.synopsis}
         trailerUrl={selectedMovie.trailerUrl}
+        posterUrl={selectedMovie.posterUrl}
         duration={selectedMovie.duration}
         releaseYear={selectedMovie.releaseYear}
         rating={selectedMovie.rating}

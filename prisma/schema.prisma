@@ -1,0 +1,203 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// User accounts inside FlixMate. Supports RBAC roles (USER, ADMIN).
+model User {
+  id                    String                 @id @default(uuid())
+  email                 String                 @unique
+  passwordHash          String
+  name                  String
+  role                  Role                   @default(USER)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  bookings              Booking[]
+  watchHistories        WatchHistory[]
+  aiPreference          UserAIPreference?
+  recommendationCaches  AIRecommendationCache[]
+
+  @@index([email])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+/// User's behavioral and geometric seat selection preferences.
+/// Used directly by the AI Recommendation Engine and Smart Seat Selector.
+model UserAIPreference {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Custom weight weights or explicit filters: e.g. ["Action", "Sci-Fi"]
+  preferredGenres       String[]  // Standard PostgreSQL array of genres
+  
+  // Dynamic metrics computed based on preferred visual layout
+  preferredViewAngle    Float     @default(0.0)  // Ideal angle from screen (0 = center, positive/negative = offsets)
+  preferredDistanceRatio Float     @default(0.5)  // Ideal normalized distance from screen (0.0 = front row, 1.0 = back row)
+  
+  updatedAt             DateTime  @updatedAt
+}
+
+/// Representative Movie entities containing rich metadata, links to media, and relationships.
+model Movie {
+  id                    String         @id @default(uuid())
+  title                 String
+  synopsis              String
+  duration              Int            // Cinema run-time in minutes
+  releaseDate           DateTime
+  posterUrl             String
+  trailerUrl            String         // Background streaming high-res URL
+  averageRating         Float          @default(0.0)
+  isFeatured            Boolean        @default(false)
+  
+  genres                Genre[]        @relation("MovieToGenre")
+  directors             Director[]     @relation("MovieToDirector")
+  showTimes             ShowTime[]
+  watchHistories        WatchHistory[]
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([isFeatured])
+}
+
+/// Movie Genres (e.g., Sci-Fi, Action, Thriller) to compile weight maps.
+model Genre {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  movies  Movie[]  @relation("MovieToGenre")
+}
+
+/// Film Directors to compile director affinity maps.
+model Director {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  bio     String?
+  movies  Movie[]  @relation("MovieToDirector")
+}
+
+/// Theater ShowTime schedules.
+model ShowTime {
+  id           String        @id @default(uuid())
+  movieId      String
+  movie        Movie         @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  startTime    DateTime
+  endTime      DateTime
+  theaterName  String        // E.g., "Hall A", "Screen 1 IMAX"
+  price        Float
+  
+  bookings     Booking[]
+  bookingSeats BookingSeat[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([movieId, startTime])
+}
+
+/// Customer Seat layout inside a physical theater hall.
+model Seat {
+  id                 String        @id @default(uuid())
+  theaterName        String        // Associated screen hall
+  seatNumber         String        // E.g., "A-12", "F-4"
+  row                String        // E.g., "A", "F"
+  col                Int           // E.g., 12, 4
+  type               SeatType      @default(STANDARD) // VIP, STANDARD, WHEELCHAIR
+  
+  // Physical coordinates for exact angle scoring
+  viewAngleScore     Float         // Relative position offset (-1.0 to 1.0)
+  distanceRatioScore Float         // Distance position offset (0.0 to 1.0)
+  
+  bookingSeats       BookingSeat[]
+
+  @@unique([theaterName, seatNumber])
+  @@index([theaterName])
+}
+
+enum SeatType {
+  STANDARD
+  VIP
+  WHEELCHAIR
+}
+
+/// Grouped booking record inside the transaction engine.
+model Booking {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  showTimeId   String
+  showTime     ShowTime      @relation(fields: [showTimeId], references: [id], onDelete: Cascade)
+  totalPrice   Float
+  status       BookingStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  bookingSeats BookingSeat[]
+
+  @@index([userId])
+  @@index([showTimeId])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+/// Bridge table representing distinct seats selected in a booking.
+/// Crucial unique constraint prevents double seating at identical ShowTimeId + SeatId.
+model BookingSeat {
+  id           String    @id @default(uuid())
+  bookingId    String
+  booking      Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  showTimeId   String
+  showTime     ShowTime  @relation(fields: [showTimeId], references: [id], onDelete: Cascade)
+  seatId       String
+  seat         Seat      @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  // Double-booking guarantee constraint
+  @@unique([showTimeId, seatId])
+  @@index([bookingId])
+}
+
+/// Tracks granular viewing completions and explicit ratings to drive ML/algorithmic recommender.
+model WatchHistory {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movieId        String
+  movie          Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  
+  completionRate Float    // Ratio of movie watched, 0.0 to 1.0
+  explicitRating Float?   // Optional explicit rating, 1.0 to 5.0
+  watchedAt      DateTime @default(now())
+
+  @@index([userId, movieId])
+}
+
+/// AI Recommendation Cache model to prevent expensive weight-map recalculations.
+model AIRecommendationCache {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stringified list or JSON map of [ { movieId: string, score: number } ]
+  recommendations  Json
+  
+  calculatedAt     DateTime @default(now())
+  expiresAt        DateTime
+
+  @@index([userId, expiresAt])
+}

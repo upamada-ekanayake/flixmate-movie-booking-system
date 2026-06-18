@@ -1,0 +1,6 @@
+{
+  "name": "FlixMate",
+  "description": "Enterprise-grade movie booking application featuring behavioral AI recommendations, smart seat selector, and immersive dynamic video backgrounds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

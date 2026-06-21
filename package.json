@@ -14,9 +14,14 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:backend": "esbuild backend/src/server.ts --bundle --platform=node --outfile=dist-backend/server.js --format=esm --packages=external",
+    "start:backend": "node dist-backend/server.js",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist dist-backend server.js",
     "lint": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

@@ -227,6 +227,8 @@ const SURGE_THRESHOLD = 0.75;
 // App Component
 // ---------------------------------------------------------------------------
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function App() {
   const [selectedMovie, setSelectedMovie] = useState<Movie>(MOCK_MOVIES[0]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -311,7 +313,30 @@ export default function App() {
   }, [watchLogs]);
 
   useEffect(() => {
-    calculateBehavioralWeights();
+    if (API_BASE_URL) {
+      const fetchRecommendations = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/recommendations/portfolio-user`);
+          if (res.ok) {
+            const data = await res.json();
+            const formatted: MovieWithScore[] = data.recommendations.map((item: any) => ({
+              ...item.movie,
+              releaseYear: new Date(item.movie.releaseDate || item.movie.releaseYear).getFullYear(),
+              aiScore: item.score,
+            }));
+            setAiRecommendations(formatted);
+          } else {
+            calculateBehavioralWeights();
+          }
+        } catch (err) {
+          console.error('Failed to fetch recommendations from backend, falling back to simulation:', err);
+          calculateBehavioralWeights();
+        }
+      };
+      fetchRecommendations();
+    } else {
+      calculateBehavioralWeights();
+    }
   }, [calculateBehavioralWeights]);
 
   // ---------------------------------------------------------------------------
@@ -344,10 +369,46 @@ export default function App() {
     );
   };
 
-  const handleCheckout = (e: React.FormEvent) => {
+  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
     setBookingResponse(null);
+
+    if (API_BASE_URL) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'portfolio-user',
+            showTimeId: 'Tomorrow-8:30PM-IMAX',
+            seatIds: selectedSeats,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setIsPending(false);
+          setBookingResponse({
+            success: true,
+            message: data.message || 'Concurrency Check Passed. Booking seat locks successfully updated.',
+            transactionId: data.booking.bookingId,
+            seats: selectedSeats,
+            movieTitle: selectedMovie.title,
+            amount: data.booking.totalPrice,
+            isSurgeActive: data.booking.isSurgeActive,
+            capacityRatio: data.booking.capacityRatio,
+            pricePerSeat: data.booking.pricePerSeat,
+          });
+          return;
+        } else {
+          setIsPending(false);
+          alert(data.message || data.error || 'Failed to complete booking.');
+          return;
+        }
+      } catch (err: any) {
+        console.error("Backend checkout failed, falling back to simulator:", err);
+      }
+    }
 
     // Simulated 1.5 s delay — visually demonstrates the atomic DB lock cycle
     setTimeout(() => {
